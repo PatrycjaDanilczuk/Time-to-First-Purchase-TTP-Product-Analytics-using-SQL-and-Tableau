@@ -1,0 +1,364 @@
+/*TTP SQL Code*/
+
+/* Creating a table mapping countries to their time zones*/
+WITH country_time_zones AS (
+  SELECT "United States" AS country, "America/New_York" AS time_zone UNION ALL
+  SELECT "Pakistan", "Asia/Karachi" UNION ALL
+  SELECT "Canada", "America/Toronto" UNION ALL
+  SELECT "Turkey", "Europe/Istanbul" UNION ALL
+  SELECT "India", "Asia/Kolkata" UNION ALL
+  SELECT "Japan", "Asia/Tokyo" UNION ALL
+  SELECT "United Kingdom", "Europe/London" UNION ALL
+  SELECT "Singapore", "Asia/Singapore" UNION ALL
+  SELECT "China", "Asia/Shanghai" UNION ALL
+  SELECT "Serbia", "Europe/Belgrade" UNION ALL
+  SELECT "Russia", "Europe/Moscow" UNION ALL
+  SELECT "Denmark", "Europe/Copenhagen" UNION ALL
+  SELECT "Australia", "Australia/Sydney" UNION ALL
+  SELECT "Mexico", "America/Mexico_City" UNION ALL
+  SELECT "Brazil", "America/Sao_Paulo" UNION ALL
+  SELECT "South Korea", "Asia/Seoul" UNION ALL
+  SELECT "Belgium", "Europe/Brussels" UNION ALL
+  SELECT "Morocco", "Africa/Casablanca" UNION ALL
+  SELECT "Italy", "Europe/Rome" UNION ALL
+  SELECT "Hong Kong", "Asia/Hong_Kong" UNION ALL
+  SELECT "Spain", "Europe/Madrid" UNION ALL
+  SELECT "Taiwan", "Asia/Taipei" UNION ALL
+  SELECT "Greece", "Europe/Athens" UNION ALL
+  SELECT "Philippines", "Asia/Manila" UNION ALL
+  SELECT "Thailand", "Asia/Bangkok" UNION ALL
+  SELECT "Indonesia", "Asia/Jakarta" UNION ALL
+  SELECT "Norway", "Europe/Oslo" UNION ALL
+  SELECT "Malaysia", "Asia/Kuala_Lumpur" UNION ALL
+  SELECT "Macao", "Asia/Macau" UNION ALL
+  SELECT "Ireland", "Europe/Dublin" UNION ALL
+  SELECT "Germany", "Europe/Berlin" UNION ALL
+  SELECT "Vietnam", "Asia/Ho_Chi_Minh" UNION ALL
+  SELECT "France", "Europe/Paris" UNION ALL
+  SELECT "Bahrain", "Asia/Bahrain" UNION ALL
+  SELECT "Kuwait", "Asia/Kuwait" UNION ALL
+  SELECT "Cyprus", "Asia/Nicosia" UNION ALL
+  SELECT "Portugal", "Europe/Lisbon" UNION ALL
+  SELECT "United Arab Emirates", "Asia/Dubai" UNION ALL
+  SELECT "Argentina", "America/Argentina/Buenos_Aires" UNION ALL
+  SELECT "Ecuador", "America/Guayaquil" UNION ALL
+  SELECT "Sweden", "Europe/Stockholm" UNION ALL
+  SELECT "Sri Lanka", "Asia/Colombo" UNION ALL
+  SELECT "North Macedonia", "Europe/Skopje" UNION ALL
+  SELECT "Ukraine", "Europe/Kiev" UNION ALL
+  SELECT "Slovakia", "Europe/Bratislava" UNION ALL
+  SELECT "Poland", "Europe/Warsaw" UNION ALL
+  SELECT "Colombia", "America/Bogota" UNION ALL
+  SELECT "Switzerland", "Europe/Zurich" UNION ALL
+  SELECT "Belarus", "Europe/Minsk" UNION ALL
+  SELECT "Mongolia", "Asia/Ulaanbaatar" UNION ALL
+  SELECT "Nigeria", "Africa/Lagos" UNION ALL
+  SELECT "Guatemala", "America/Guatemala" UNION ALL
+  SELECT "Israel", "Asia/Jerusalem" UNION ALL
+  SELECT "Saudi Arabia", "Asia/Riyadh" UNION ALL
+  SELECT "Chile", "America/Santiago" UNION ALL
+  SELECT "Peru", "America/Lima" UNION ALL
+  SELECT "Oman", "Asia/Muscat" UNION ALL
+  SELECT "Czechia", "Europe/Prague" UNION ALL
+  SELECT "Romania", "Europe/Bucharest" UNION ALL
+  SELECT "Austria", "Europe/Vienna" UNION ALL
+  SELECT "Finland", "Europe/Helsinki" UNION ALL
+  SELECT "Slovenia", "Europe/Ljubljana" UNION ALL
+  SELECT "Kosovo", "Europe/Belgrade" UNION ALL
+  SELECT "Azerbaijan", "Asia/Baku" UNION ALL
+  SELECT "Croatia", "Europe/Zagreb" UNION ALL
+  SELECT "Ghana", "Africa/Accra" UNION ALL
+  SELECT "Egypt", "Africa/Cairo" UNION ALL
+  SELECT "Qatar", "Asia/Qatar" UNION ALL
+  SELECT "Algeria", "Africa/Algiers" UNION ALL
+  SELECT "Bulgaria", "Europe/Sofia" UNION ALL
+  SELECT "Hungary", "Europe/Budapest" UNION ALL
+  SELECT "Palestine", "Asia/Gaza" UNION ALL
+  SELECT "New Zealand", "Pacific/Auckland" UNION ALL
+  SELECT "Lithuania", "Europe/Vilnius" UNION ALL
+  SELECT "Latvia", "Europe/Riga" UNION ALL
+  SELECT "Bangladesh", "Asia/Dhaka" UNION ALL
+  SELECT "Kenya", "Africa/Nairobi" UNION ALL
+  SELECT "Iraq", "Asia/Baghdad" UNION ALL
+  SELECT "South Africa", "Africa/Johannesburg" UNION ALL
+  SELECT "Bahamas", "America/Nassau" UNION ALL
+  SELECT "Myanmar (Burma)", "Asia/Yangon" UNION ALL
+  SELECT "Puerto Rico", "America/Puerto_Rico" UNION ALL
+  SELECT "Albania", "Europe/Tirane" UNION ALL
+  SELECT "Iceland", "Atlantic/Reykjavik" UNION ALL
+  SELECT "Dominican Republic", "America/Santo_Domingo" UNION ALL
+  SELECT "Estonia", "Europe/Tallinn" UNION ALL
+  SELECT "Uruguay", "America/Montevideo" UNION ALL
+  SELECT "Venezuela", "America/Caracas" UNION ALL
+  SELECT "Kazakhstan", "Asia/Almaty" UNION ALL
+  SELECT "Costa Rica", "America/Costa_Rica" UNION ALL
+  SELECT "Honduras", "America/Tegucigalpa" UNION ALL
+  SELECT "Nepal", "Asia/Kathmandu" UNION ALL
+  SELECT "Trinidad & Tobago", "America/Port_of_Spain" UNION ALL
+  SELECT "Bolivia", "America/La_Paz" UNION ALL
+  SELECT "Panama", "America/Panama" UNION ALL
+  SELECT "Bosnia & Herzegovina", "Europe/Sarajevo" UNION ALL
+  SELECT "Jordan", "Asia/Amman" UNION ALL
+  SELECT "Georgia", "Asia/Tbilisi" UNION ALL
+  SELECT "Tunisia", "Africa/Tunis" UNION ALL
+  SELECT "Cambodia", "Asia/Phnom_Penh" UNION ALL
+  SELECT "Malta", "Europe/Malta" UNION ALL
+  SELECT "Armenia", "Asia/Yerevan" UNION ALL
+  SELECT "Paraguay", "America/Asuncion" UNION ALL
+  SELECT "Luxembourg", "Europe/Luxembourg"
+),
+
+local AS (
+/*selecting columns for analysis; converting event_timestamp into datetime in microseconds; converting UTC into local time; checked duplicates before comparing SELECT COUNT(*) and SELECT DISTINCT(COUNT(*) - no duplicates in raw_events table*/
+  SELECT
+    re.user_pseudo_id AS user_id,
+    re.category,
+    -- re.campaign,
+    re.medium,
+    re.browser,
+    re.country,
+    purchase_revenue_in_usd,
+    parse_date('%Y%m%d', re.event_date) AS event_date,
+    TIMESTAMP_MICROS(re.event_timestamp) AS event_time_UTC,
+    ct.time_zone AS local_time_zone,                         -- Time zone based on the country
+    TIMESTAMP(DATETIME(TIMESTAMP_MICROS(re.event_timestamp), ct.time_zone)) AS event_time_local,
+    re.event_name
+  FROM
+    `turing_data_analytics.raw_events`re
+    LEFT JOIN
+  country_time_zones ct
+    ON
+    re.country = ct.country
+  ORDER BY re.user_id, re.event_date, re.event_timestamp),
+
+first_visit AS (
+  SELECT
+   *,
+   /*adding time of first ever visit user to a site*/
+   MIN(event_time_local) OVER (PARTITION BY user_id ORDER BY event_time_local) AS user_first_visit,
+   CASE
+   /*adding purchase flag for further transforamtions*/
+    WHEN event_name = 'purchase' THEN 1 ELSE 0 END AS purchase_flag
+  FROM
+   local
+  ORDER BY user_id, event_time_local),
+
+purchase as (
+  SELECT
+   *,
+   /*assigning flag for users who made a purchase*/
+   MAX(purchase_flag) OVER (PARTITION BY user_id) AS converted_user_flag,
+   /*assigning number of purchases per user*/
+   SUM(purchase_flag) OVER (PARTITION BY user_id ORDER BY event_time_local) AS no_of_purchases
+   FROM first_visit
+   ORDER BY user_id, event_date, event_time_local),
+
+first_purchase AS (
+  SELECT
+   *,
+   /*assigning user first purchase time*/
+   CASE WHEN purchase_flag = 1 AND no_of_purchases =  1 THEN event_time_local END AS user_first_purchase_time
+   FROM
+   purchase
+   ORDER BY user_id, event_date, event_time_local),
+
+converted AS (
+  SELECT
+   *,
+  /*assigning time of first purchase for each user*/
+  MAX(user_first_purchase_time) OVER (PARTITION BY user_id) AS user_first_purchase,
+  /*assigning total number of purchases for each user*/
+  MAX(no_of_purchases) OVER (PARTITION BY user_id) AS user_no_of_purchases
+  FROM
+  first_purchase
+  /*filtering out only converted users events*/
+  WHERE converted_user_flag = 1
+  ORDER BY user_id, event_time_local),
+
+/*filtering out all events from first visit to first purchase for converted users*/
+first_purchase_events AS (
+  SELECT
+  *,
+  /*concatenating user_id with device to get unique session identifier - there are users with events on different devices, which should be considered as separate sessions*/
+  CONCAT(user_id, '_', category) AS user_session_id,
+  /* assigning category, medium, browser for each user first purchase based on first-touch attribution*/
+  FIRST_VALUE(category) OVER (PARTITION BY user_id ORDER BY event_time_local) AS starting_device,
+  FIRST_VALUE(medium) OVER (PARTITION BY user_id ORDER BY event_time_local) AS starting_medium,
+  FIRST_VALUE(browser) OVER (PARTITION BY user_id ORDER BY event_time_local) AS starting_browser,
+  /* purchase revenue of the first purchase*/
+  MAX(purchase_revenue_in_usd) OVER (PARTITION BY user_id) purchase_value,
+  /*number of devices used to first purchase*/
+  COUNT(DISTINCT(category)) OVER (PARTITION BY user_id) AS no_devices_used,
+  /*assigning recurring users flag*/
+  CASE WHEN user_no_of_purchases > 1 THEN 1 ELSE 0 END AS recurring_user_flag
+  FROM
+  converted
+  WHERE event_time_local <= user_first_purchase
+  ORDER BY user_id, event_time_local),
+
+/* assigning previous event and time since last event in seconds to divide events into sessions*/
+last_event AS (
+  SELECT
+  *,
+  LAG(event_time_local, 1) OVER (PARTITION BY user_session_id ORDER BY  event_time_local) previous_event,
+  TIMESTAMP_DIFF(event_time_local, LAG(event_time_local, 1) OVER (PARTITION BY user_session_id ORDER BY event_time_local), SECOND) AS time_since_last_event,
+  FROM
+  first_purchase_events
+  ORDER BY user_id, event_time_local),
+
+/*assigning breaks between sessions (if the difference between events is longer than 30 minutes, this will be considered as a break in session, the event assigned as break in session will be considered as a start of new session)*/
+breaks AS (
+  SELECT
+    *,
+    CASE
+      WHEN time_since_last_event > 1800 THEN 1 ELSE 0 END AS session_break,
+  FROM
+    last_event),
+
+/*assigning session number per user_session_id (one user can have multiple sessions additionally on different devices)*/
+session_no AS (
+  SELECT
+    *,
+    SUM(session_break) OVER (PARTITION BY user_session_id ORDER BY event_time_local) AS session_number
+  FROM
+  breaks),
+
+sessionID AS (
+  SELECT
+    *,
+    /*creating session_id (each session is assigned with individual id)*/
+    CONCAT(user_session_id, "_", session_number) AS session_id,
+    /*calculating number of sessions to first purchase for each user*/
+    COUNT(DISTINCT(CONCAT(user_session_id, "_", session_number))) OVER (PARTITION BY user_id) number_of_sessions
+  FROM
+  session_no),
+
+/*getting session start time and session end time for each session*/
+session_start_end AS (
+  SELECT
+    *,
+    MIN(event_time_local) OVER (PARTITION BY session_id) AS session_start,
+    MAX(event_time_local) OVER (PARTITION BY session_id) AS session_end
+  FROM
+  sessionID),
+
+sessionDuration AS (
+  SELECT
+    *,
+    /*calculating session duration*/
+    DATETIME_DIFF(session_end, session_start, SECOND) AS session_duration_seconds,
+    DATETIME_DIFF(session_end, session_start, MINUTE) AS session_duration_minutes,
+    /*calculating time to first purchase in callendar time*/
+    DATETIME_DIFF(user_first_purchase, user_first_visit, SECOND) as ttp_callendar_seconds,
+    DATETIME_DIFF(user_first_purchase, user_first_visit, MINUTE) as ttp_callendar_minutes,
+    DATETIME_DIFF(user_first_purchase, user_first_visit, HOUR) as ttp_callendar_hours,
+    DATETIME_DIFF(user_first_purchase, user_first_visit, DAY) as ttp_callendar_days
+  FROM
+  session_start_end
+  ORDER BY user_id, event_time_local),
+
+/*selecting distinct sessions per user*/
+distinct_sessions AS (
+SELECT DISTINCT
+  user_id,
+  session_id,
+  country,
+  purchase_value,
+  user_first_visit,
+  user_first_purchase,
+  user_no_of_purchases,
+  starting_device,
+  starting_medium,
+  starting_browser,
+  no_devices_used,
+  recurring_user_flag,
+  number_of_sessions,
+  session_start,
+  session_end,
+  session_duration_seconds,
+  session_duration_minutes,
+  ttp_callendar_seconds,
+  ttp_callendar_minutes,
+  ttp_callendar_hours,
+  ttp_callendar_days
+FROM sessionDuration
+ORDER BY user_id, session_id),
+
+active_ttp AS (
+SELECT
+  user_id,
+  session_id,
+  country,
+  purchase_value,
+  user_first_visit,
+  user_first_purchase,
+  user_no_of_purchases,
+  starting_device,
+  starting_medium,
+  starting_browser,
+  no_devices_used,
+  recurring_user_flag,
+  number_of_sessions AS no_of_sessions_to_first_purchase,
+  session_start,
+  session_end,
+  session_duration_seconds,
+  /*calculating active time to first purchase*/
+  SUM(session_duration_seconds) OVER (PARTITION BY user_id) AS ttp_active_seconds,
+  session_duration_minutes,
+  SUM(session_duration_minutes) OVER (PARTITION BY user_id) AS ttp_active_minutes,
+  ttp_callendar_seconds,
+  ttp_callendar_minutes,
+  ttp_callendar_hours,
+  ttp_callendar_days,
+  ttp_callendar_days + 1 AS no_of_days_to_purchase
+FROM distinct_sessions)
+
+/*selecting relevant data per distinct users; validated results - count(distinct(user_id) = 4330 = no of records received*/
+SELECT DISTINCT
+  user_id,
+  ttp_active_seconds,
+  ttp_active_minutes,
+  ttp_callendar_seconds,
+  ttp_callendar_minutes,
+  ttp_callendar_hours,
+  ttp_callendar_days,
+  no_of_days_to_purchase,
+  user_first_visit,
+  DATETIME_TRUNC(user_first_visit, DAY) AS user_first_visit_date,
+  user_first_purchase,
+  DATETIME_TRUNC(user_first_purchase, DAY) AS user_first_purchase_date,
+  country,
+  purchase_value,
+  user_no_of_purchases,
+  starting_device,
+  starting_medium,
+  starting_browser,
+  no_devices_used,
+  recurring_user_flag,
+  no_of_sessions_to_first_purchase,
+  ttp_active_seconds/no_of_sessions_to_first_purchase AS avg_session_duration_seconds,
+  ttp_active_minutes/no_of_sessions_to_first_purchase AS avg_session_duration_minutes,
+
+  /*assigning segments by time to first purcase by active time on the site*/
+  CASE
+    WHEN ttp_active_minutes <= 5 THEN "up_to_5_min"
+    WHEN ttp_active_minutes <= 15 THEN "up_to_15_min"
+    WHEN ttp_active_minutes <= 30 THEN "up_to_30_min"
+    WHEN ttp_active_minutes <= 60 THEN "up_to_1_hour"
+    WHEN ttp_active_minutes <= 180 THEN "up_to_3_hours"
+    WHEN ttp_active_minutes <= 360 THEN "up_to_6_hours"
+    ELSE "over_6_hours"
+    END AS ttp_active_segment,
+
+  /*assigning segments by time to first purchase by callendar time*/
+  CASE
+    WHEN no_of_days_to_purchase = 1 THEN "the_same_day"
+    WHEN no_of_days_to_purchase = 2 THEN "the_second_day"
+    WHEN no_of_days_to_purchase <= 7 THEN "within_next_7_days"
+    WHEN no_of_days_to_purchase <= 14 THEN "within_next_14_days"
+    WHEN no_of_days_to_purchase <= 30 THEN "within_next_30_days"
+    WHEN no_of_days_to_purchase <= 90 THEN "within_next_90_days"
+    ELSE "over_next_90_days"
+    END AS ttp_callendar_segment
+
+FROM active_ttp;
