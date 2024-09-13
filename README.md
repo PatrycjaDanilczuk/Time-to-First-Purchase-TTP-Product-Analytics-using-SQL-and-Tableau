@@ -94,7 +94,7 @@ Defined user session model implies, that one user can have multiple sessions on 
 
 Out of over 4 mln events from raw_events table created a table of 4.330 records of unique users with relevant data from their first visit to a site (first event of the user by timestamp) to their first purchase, in the given period of time. 
 
-Table from this query has been used for analysis in the next steps of the project. To view the code go to the uploaded SQL file [Product Analyst Project SQL code](https://github.com/TuringCollegeSubmissions/pdanil-PA.1.3/blob/main/Product%20Analyst%20Project%20SQL%20code)
+Table from this query has been used for analysis in the next steps of the project. To view the code go to the uploaded SQL file [TTP SQL Code](https://github.com/PatrycjaDanilczuk/Time-to-First-Purchase-TTP-Product-Analytics-using-SQL-and-Tableau/blob/main/TTP%20SQL%20Code)
 
 <details>
 
