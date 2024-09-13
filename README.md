@@ -125,6 +125,6 @@ Using Tableau for further analysis
 Preparing Dashboard with relevant visuals. The link to the dashboard can be found here: [TTP Dashboard](https://public.tableau.com/app/profile/pat.dan/viz/TTPDashboard/DOverview)
 
 ## 6.	Communicating analysis results and providing actionable insights
-Preparing presentation for business. The presentation had been uploaded in the PDF file: [Product Analyst Presentation for Business](https://github.com/TuringCollegeSubmissions/pdanil-PA.1.3/blob/main/Product%20Analyst%20prsentation%20for%20business.pdf)
+Preparing presentation for business. The presentation had been uploaded in the PDF file: [TTP Presentation for Business](https://github.com/PatrycjaDanilczuk/Time-to-First-Purchase-TTP-Product-Analytics-using-SQL-and-Tableau/blob/main/TTP%20Presentation%20for%20business.pdf)
 
 Use Tableau [TTP Dashboard](https://public.tableau.com/app/profile/pat.dan/viz/TTPDashboard/DOverview) for more details.
